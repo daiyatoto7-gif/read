@@ -1,36 +1,87 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 📚 BookLog
+
+シンプルで続けやすい読書記録アプリ。タイトルと日付だけで記録完了。
+データはクラウド（Supabase）に保存されるため、端末を変えても消えません。
+
+## Features
+
+- ✅ タイトル＋日付だけで即記録
+- ☁️ Supabaseクラウド保存（データが消えない）
+- 📊 読書量の自動統計・可視化（バーチャート・ヒートマップ・ジャンル分布）
+- 🔥 週単位の連続読了ストリーク
+- 🏆 実績バッジシステム（8種類）
+- 📤 JSON/CSVエクスポート
+- 🌐 Open Library API連携（表紙・著者自動取得）
+- 📱 スマホ対応（Safari / ホーム画面追加で使える）
+- 🌙 ダークモード対応
+- 🔔 Web Pushリマインダー通知
 
 ## Getting Started
 
-First, run the development server:
+### 1. リポジトリをクローン
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+git clone https://github.com/daiyatoto7-gif/read
+cd read
+pnpm install
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### 2. Supabaseのセットアップ
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+1. [supabase.com](https://supabase.com) でプロジェクトを作成（リージョン: Northeast Asia Tokyo 推奨）
+2. Supabaseダッシュボードの「SQL Editor」を開く
+3. `supabase/schema.sql` の内容をコピーして貼り付け、「Run」をクリック
+4. `.env.local` を作成して環境変数を設定
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```
+NEXT_PUBLIC_SUPABASE_URL=your-project-url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
+```
 
-## Learn More
+> 環境変数の値は Supabaseダッシュボード → Settings → API から取得できます
 
-To learn more about Next.js, take a look at the following resources:
+### 3. 開発サーバー起動
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+pnpm dev
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+http://localhost:3000 にアクセスしてください。
 
-## Deploy on Vercel
+### 4. メール確認を無効にする場合（開発時）
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Supabaseダッシュボード → Authentication → Settings → 「Confirm email」をオフにすると、確認メールなしで登録が完了します。
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### 5. Vercelへのデプロイ
+
+1. GitHubにpush
+2. [vercel.com](https://vercel.com) でリポジトリを連携してデプロイ
+3. Vercelの「Environment Variables」に `.env.local` と同じ値を設定
+
+## Tech Stack
+
+| カテゴリ | 技術 |
+|---|---|
+| フレームワーク | Next.js 16（App Router） |
+| スタイリング | Tailwind CSS + shadcn/ui |
+| データベース | Supabase（PostgreSQL） |
+| 認証 | Supabase Auth（メール＋パスワード） |
+| 言語 | TypeScript |
+| パッケージ管理 | pnpm |
+| デプロイ | Vercel |
+| グラフ | Recharts |
+| 紙吹雪 | canvas-confetti |
+
+## Database Schema
+
+`supabase/schema.sql` を参照してください。以下のテーブルが含まれます:
+
+- `books` - 書籍記録（タイトル、読了日、著者、ジャンル、評価、メモなど）
+- `user_settings` - ユーザー設定（月間目標、通知設定）
+- `badges` - 実績バッジ
+
+すべてのテーブルはRow Level Security（RLS）が有効で、ユーザーは自分のデータのみアクセスできます。
+
+## License
+
+MIT
