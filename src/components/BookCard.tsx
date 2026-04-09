@@ -61,8 +61,8 @@ export default function BookCard({ book, onUpdate, onDelete }: Props) {
   return (
     <>
       <div
-        className="bg-white rounded-2xl border p-4 cursor-pointer hover:shadow-md transition-shadow"
-        style={{ borderColor: 'var(--color-border)' }}
+        className="rounded-2xl border p-4 cursor-pointer hover:shadow-md transition-shadow"
+        style={{ background: 'var(--color-card)', borderColor: 'var(--color-border)' }}
         onClick={() => setOpen(true)}
       >
         <div className="flex gap-3">
@@ -213,7 +213,7 @@ export default function BookCard({ book, onUpdate, onDelete }: Props) {
                   maxLength={200}
                   rows={3}
                   className="w-full mt-1 px-3 py-2 border rounded-lg text-sm resize-none"
-                  style={{ borderColor: 'var(--color-border)' }}
+                  style={{ borderColor: 'var(--color-border)', background: 'var(--color-bg)', color: 'var(--color-text)' }}
                 />
               </div>
               <div className="flex gap-3 pt-2">

@@ -23,64 +23,92 @@ export default function Navigation() {
   return (
     <>
       {/* PC用サイドバー */}
-      <aside className="hidden lg:flex flex-col w-60 min-h-screen border-r bg-white fixed top-0 left-0" style={{ borderColor: 'var(--color-border)' }}>
+      <aside
+        className="hidden lg:flex flex-col w-60 min-h-screen border-r fixed top-0 left-0"
+        style={{
+          background: 'var(--color-card)',
+          borderColor: 'var(--color-border)',
+        }}
+      >
         <div className="p-6 border-b" style={{ borderColor: 'var(--color-border)' }}>
-          <Link href="/" className="text-2xl font-bold" style={{ color: 'var(--color-primary)' }}>
-            📚 BookLog
+          <Link href="/" className="flex items-center gap-2">
+            <span
+              className="flex items-center justify-center w-9 h-9 rounded-xl text-lg"
+              style={{ background: 'linear-gradient(135deg, var(--color-primary), #3DAA28)' }}
+            >
+              📚
+            </span>
+            <span className="text-lg font-bold tracking-tight" style={{ color: 'var(--color-text)' }}>
+              BookLog
+            </span>
           </Link>
         </div>
-        <nav className="flex-1 p-4 space-y-1">
-          {navItems.map(item => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={`flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-colors ${
-                pathname === item.href
-                  ? 'text-white'
-                  : 'hover:bg-gray-50'
-              }`}
-              style={pathname === item.href ? { background: 'var(--color-primary)' } : { color: 'var(--color-text)' }}
-            >
-              <span>{item.icon}</span>
-              <span>{item.label}</span>
-            </Link>
-          ))}
+        <nav className="flex-1 p-3 space-y-0.5">
+          {navItems.map(item => {
+            const active = pathname === item.href
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className="flex items-center gap-3 px-4 py-2.5 rounded-xl font-medium transition-all text-sm"
+                style={
+                  active
+                    ? {
+                        background: 'var(--color-primary)',
+                        color: 'white',
+                      }
+                    : {
+                        color: 'var(--color-subtext)',
+                      }
+                }
+              >
+                <span className="text-base">{item.icon}</span>
+                <span>{item.label}</span>
+              </Link>
+            )
+          })}
         </nav>
-        <div className="p-4 border-t space-y-2" style={{ borderColor: 'var(--color-border)' }}>
-          <Button
-            variant="ghost"
-            size="sm"
+        <div className="p-3 border-t space-y-0.5" style={{ borderColor: 'var(--color-border)' }}>
+          <button
             onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-            className="w-full justify-start"
+            className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-colors"
+            style={{ color: 'var(--color-subtext)' }}
           >
-            {theme === 'dark' ? '☀️ ライトモード' : '🌙 ダークモード'}
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
+            {theme === 'dark' ? '☀️' : '🌙'}
+            <span>{theme === 'dark' ? 'ライトモード' : 'ダークモード'}</span>
+          </button>
+          <button
             onClick={signOut}
-            className="w-full justify-start text-red-500 hover:text-red-600"
+            className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-colors text-red-400 hover:text-red-300"
           >
-            ログアウト
-          </Button>
+            <span>↩</span>
+            <span>ログアウト</span>
+          </button>
         </div>
       </aside>
 
       {/* スマホ用ボトムナビ */}
-      <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t z-50 flex" style={{ borderColor: 'var(--color-border)' }}>
-        {navItems.map(item => (
-          <Link
-            key={item.href}
-            href={item.href}
-            className={`flex-1 flex flex-col items-center py-2 text-xs font-medium transition-colors ${
-              pathname === item.href ? '' : ''
-            }`}
-            style={{ color: pathname === item.href ? 'var(--color-primary)' : 'var(--color-subtext)' }}
-          >
-            <span className="text-xl">{item.icon}</span>
-            <span>{item.label}</span>
-          </Link>
-        ))}
+      <nav
+        className="lg:hidden fixed bottom-0 left-0 right-0 border-t z-50 flex"
+        style={{
+          background: 'var(--color-card)',
+          borderColor: 'var(--color-border)',
+        }}
+      >
+        {navItems.map(item => {
+          const active = pathname === item.href
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              className="flex-1 flex flex-col items-center py-2 text-xs font-medium transition-colors gap-0.5"
+              style={{ color: active ? 'var(--color-primary)' : 'var(--color-subtext)' }}
+            >
+              <span className="text-xl leading-tight">{item.icon}</span>
+              <span>{item.label}</span>
+            </Link>
+          )
+        })}
       </nav>
     </>
   )

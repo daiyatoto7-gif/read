@@ -7,7 +7,7 @@ interface Props {
 
 export default function StreakBadge({ currentStreak, longestStreak }: Props) {
   return (
-    <div className="bg-white rounded-2xl border p-4" style={{ borderColor: 'var(--color-border)' }}>
+    <div className="rounded-2xl border p-4" style={{ background: 'var(--color-card)', borderColor: 'var(--color-border)' }}>
       <div className="flex items-center gap-3">
         <span className={`text-3xl ${currentStreak > 0 ? 'animate-bounce' : ''}`}>
           {currentStreak > 0 ? '🔥' : '💤'}

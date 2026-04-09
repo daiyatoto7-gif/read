@@ -83,11 +83,11 @@ export default function DashboardPage() {
       <Navigation />
       <main className="max-w-2xl mx-auto p-4 space-y-4">
         <div className="flex items-center justify-between pt-4">
-          <h1 className="text-xl font-bold" style={{ color: 'var(--color-primary)' }}>ダッシュボード</h1>
+          <h1 className="text-xl font-bold" style={{ color: 'var(--color-text)' }}>ダッシュボード</h1>
         </div>
 
         {/* 今月の進捗 */}
-        <div className="bg-white rounded-2xl border p-4 space-y-2" style={{ borderColor: 'var(--color-border)' }}>
+        <div className="rounded-2xl border p-4 space-y-2" style={{ background: 'var(--color-card)', borderColor: 'var(--color-border)' }}>
           <div className="flex justify-between items-center">
             <p className="font-semibold">今月の読了</p>
             <p className="text-2xl font-bold" style={{ color: 'var(--color-primary)' }}>
@@ -113,7 +113,7 @@ export default function DashboardPage() {
         <StreakBadge currentStreak={stats.currentStreak} longestStreak={stats.longestStreak} />
 
         {/* 読書ペース予測 */}
-        <div className="bg-white rounded-2xl border p-4" style={{ borderColor: 'var(--color-border)' }}>
+        <div className="rounded-2xl border p-4" style={{ background: 'var(--color-card)', borderColor: 'var(--color-border)' }}>
           <p className="font-semibold mb-1">読書ペース予測</p>
           <p className="text-sm" style={{ color: 'var(--color-subtext)' }}>
             このペースだと年間約 <span className="font-bold text-base" style={{ color: 'var(--color-primary)' }}>{stats.predictedAnnualCount}冊</span> 読了できます
@@ -128,7 +128,7 @@ export default function DashboardPage() {
         </div>
 
         {/* 月別グラフ */}
-        <div className="bg-white rounded-2xl border p-4" style={{ borderColor: 'var(--color-border)' }}>
+        <div className="rounded-2xl border p-4" style={{ background: 'var(--color-card)', borderColor: 'var(--color-border)' }}>
           <p className="font-semibold mb-3">今年の月別読了数</p>
           <MonthlyBarChart data={stats.monthlyData} />
         </div>
@@ -137,7 +137,7 @@ export default function DashboardPage() {
         <div>
           <p className="font-semibold mb-3">最近読んだ本</p>
           {books.length === 0 ? (
-            <div className="bg-white rounded-2xl border p-8 text-center" style={{ borderColor: 'var(--color-border)' }}>
+            <div className="rounded-2xl border p-8 text-center" style={{ background: 'var(--color-card)', borderColor: 'var(--color-border)' }}>
               <p className="text-4xl mb-2">📖</p>
               <p style={{ color: 'var(--color-subtext)' }}>まだ記録がありません</p>
               <p className="text-sm mt-1" style={{ color: 'var(--color-subtext)' }}>下のボタンから最初の1冊を記録しましょう</p>
@@ -152,7 +152,7 @@ export default function DashboardPage() {
         </div>
 
         {/* 今日の名言 */}
-        <div className="rounded-2xl border p-4" style={{ borderColor: 'var(--color-border)', background: '#FFFDF8' }}>
+        <div className="rounded-2xl border p-4" style={{ borderColor: 'var(--color-border)', background: 'var(--color-card)' }}>
           <p className="text-xs font-medium mb-2" style={{ color: 'var(--color-accent)' }}>📖 今日の名言</p>
           <p className="text-sm italic" style={{ color: 'var(--color-text)' }}>"{quote.text}"</p>
           <p className="text-xs mt-2 text-right" style={{ color: 'var(--color-subtext)' }}>— {quote.author}</p>

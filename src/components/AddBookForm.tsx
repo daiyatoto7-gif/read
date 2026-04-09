@@ -137,7 +137,10 @@ export default function AddBookForm({ open, onClose, onAdd }: Props) {
                   key={i}
                   type="button"
                   onClick={() => applySuggestion(s)}
-                  className="w-full text-left p-2 rounded hover:bg-gray-50 text-sm"
+                  className="w-full text-left p-2 rounded text-sm transition-colors"
+                  style={{ color: 'var(--color-text)' }}
+                  onMouseOver={e => (e.currentTarget.style.background = 'var(--color-border)')}
+                  onMouseOut={e => (e.currentTarget.style.background = 'transparent')}
                 >
                   <div className="font-medium">{s.title}</div>
                   {s.author_name?.[0] && (
@@ -236,7 +239,7 @@ export default function AddBookForm({ open, onClose, onAdd }: Props) {
               maxLength={200}
               rows={3}
               className="w-full mt-1 px-3 py-2 border rounded-lg text-sm resize-none"
-              style={{ borderColor: 'var(--color-border)' }}
+              style={{ borderColor: 'var(--color-border)', background: 'var(--color-bg)', color: 'var(--color-text)' }}
             />
             <p className="text-xs text-right" style={{ color: 'var(--color-subtext)' }}>{memo.length}/200</p>
           </div>

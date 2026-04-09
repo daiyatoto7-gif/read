@@ -130,10 +130,10 @@ export default function SettingsPage() {
     <div className="lg:ml-60 pb-20 lg:pb-0">
       <Navigation />
       <main className="max-w-2xl mx-auto p-4 space-y-6">
-        <h1 className="text-xl font-bold pt-4" style={{ color: 'var(--color-primary)' }}>設定</h1>
+        <h1 className="text-xl font-bold pt-4" style={{ color: 'var(--color-text)' }}>設定</h1>
 
         {/* ユーザー情報 */}
-        <section className="bg-white rounded-2xl border p-4 space-y-3" style={{ borderColor: 'var(--color-border)' }}>
+        <section className="rounded-2xl border p-4 space-y-3" style={{ background: 'var(--color-card)', borderColor: 'var(--color-border)' }}>
           <h2 className="font-semibold">アカウント</h2>
           <p className="text-sm" style={{ color: 'var(--color-subtext)' }}>{user?.email}</p>
           <Button variant="outline" onClick={signOut} className="text-red-500 border-red-200 hover:bg-red-50">
@@ -142,7 +142,7 @@ export default function SettingsPage() {
         </section>
 
         {/* 月間目標 */}
-        <section className="bg-white rounded-2xl border p-4 space-y-3" style={{ borderColor: 'var(--color-border)' }}>
+        <section className="rounded-2xl border p-4 space-y-3" style={{ background: 'var(--color-card)', borderColor: 'var(--color-border)' }}>
           <h2 className="font-semibold">月間目標</h2>
           <div>
             <Label htmlFor="goal">1ヶ月に読む冊数の目標</Label>
@@ -167,7 +167,7 @@ export default function SettingsPage() {
         </section>
 
         {/* テーマ */}
-        <section className="bg-white rounded-2xl border p-4 space-y-3" style={{ borderColor: 'var(--color-border)' }}>
+        <section className="rounded-2xl border p-4 space-y-3" style={{ background: 'var(--color-card)', borderColor: 'var(--color-border)' }}>
           <h2 className="font-semibold">テーマ</h2>
           <Select value={theme ?? 'system'} onValueChange={(v) => setTheme(v ?? 'system')}>
             <SelectTrigger className="w-40">
@@ -182,7 +182,7 @@ export default function SettingsPage() {
         </section>
 
         {/* 通知設定 */}
-        <section className="bg-white rounded-2xl border p-4 space-y-3" style={{ borderColor: 'var(--color-border)' }}>
+        <section className="rounded-2xl border p-4 space-y-3" style={{ background: 'var(--color-card)', borderColor: 'var(--color-border)' }}>
           <h2 className="font-semibold">リマインダー通知</h2>
           <p className="text-xs" style={{ color: 'var(--color-subtext)' }}>
             ※ HTTPS環境（Vercelデプロイ後）でのみ動作します
@@ -230,7 +230,7 @@ export default function SettingsPage() {
         </section>
 
         {/* バッジ一覧 */}
-        <section className="bg-white rounded-2xl border p-4 space-y-3" style={{ borderColor: 'var(--color-border)' }}>
+        <section className="rounded-2xl border p-4 space-y-3" style={{ background: 'var(--color-card)', borderColor: 'var(--color-border)' }}>
           <h2 className="font-semibold">実績バッジ</h2>
           <div className="grid grid-cols-2 gap-3">
             {BADGE_DEFINITIONS.map(badge => {
@@ -252,7 +252,7 @@ export default function SettingsPage() {
         </section>
 
         {/* データ管理 */}
-        <section className="bg-white rounded-2xl border p-4 space-y-3" style={{ borderColor: 'var(--color-border)' }}>
+        <section className="rounded-2xl border p-4 space-y-3" style={{ background: 'var(--color-card)', borderColor: 'var(--color-border)' }}>
           <h2 className="font-semibold">データ管理</h2>
           <p className="text-sm" style={{ color: 'var(--color-subtext)' }}>
             全{books.length}冊のデータをエクスポートできます

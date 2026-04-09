@@ -55,7 +55,7 @@ export default function BooksPage() {
       <Navigation />
       <main className="max-w-2xl mx-auto p-4 space-y-4">
         <div className="flex items-center justify-between pt-4">
-          <h1 className="text-xl font-bold" style={{ color: 'var(--color-primary)' }}>本棚</h1>
+          <h1 className="text-xl font-bold" style={{ color: 'var(--color-text)' }}>本棚</h1>
           <span className="text-sm" style={{ color: 'var(--color-subtext)' }}>全{books.length}冊</span>
         </div>
 
