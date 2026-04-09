@@ -29,7 +29,13 @@ export default function RegisterPage() {
     }
 
     setLoading(true)
-    const { error } = await supabase.auth.signUp({ email, password })
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        emailRedirectTo: `${window.location.origin}/auth/login`,
+      },
+    })
 
     if (error) {
       toast.error('登録に失敗しました: ' + error.message)
