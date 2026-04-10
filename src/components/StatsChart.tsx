@@ -107,9 +107,9 @@ export function YearHeatmap({ finishedDates }: HeatmapProps) {
   }
 
   const getColor = (count: number) => {
-    if (count === 0) return '#E5E0D8'
+    if (count === 0) return 'var(--color-border)'
     if (count === 1) return '#9DC97A'
-    return '#2D5016'
+    return 'var(--color-primary)'
   }
 
   return (
@@ -130,9 +130,9 @@ export function YearHeatmap({ finishedDates }: HeatmapProps) {
       </div>
       <div className="flex items-center gap-2 mt-2 text-xs" style={{ color: 'var(--color-subtext)' }}>
         <span>少</span>
-        <div className="w-3 h-3 rounded-sm" style={{ background: '#E5E0D8' }} />
+        <div className="w-3 h-3 rounded-sm" style={{ background: 'var(--color-border)' }} />
         <div className="w-3 h-3 rounded-sm" style={{ background: '#9DC97A' }} />
-        <div className="w-3 h-3 rounded-sm" style={{ background: '#2D5016' }} />
+        <div className="w-3 h-3 rounded-sm" style={{ background: 'var(--color-primary)' }} />
         <span>多</span>
       </div>
     </div>

@@ -22,10 +22,46 @@ interface Props {
   onAdd: (input: AddBookInput) => Promise<unknown>
 }
 
+const DRAFT_KEY = 'booklog_draft'
+
+interface Draft {
+  title: string
+  finishedAt: string
+  author: string
+  genre: string
+  rating: string
+  memo: string
+  pageCount: string
+}
+
+const getToday = () => new Date().toISOString().slice(0, 10)
+
+const saveDraft = (draft: Draft) => {
+  try {
+    localStorage.setItem(DRAFT_KEY, JSON.stringify(draft))
+  } catch {
+    // localStorage が使えない環境では無視
+  }
+}
+
+const clearDraft = () => {
+  try {
+    localStorage.removeItem(DRAFT_KEY)
+  } catch {}
+}
+
+const loadDraft = (): Draft | null => {
+  try {
+    const raw = localStorage.getItem(DRAFT_KEY)
+    return raw ? (JSON.parse(raw) as Draft) : null
+  } catch {
+    return null
+  }
+}
+
 export default function AddBookForm({ open, onClose, onAdd }: Props) {
-  const today = new Date().toISOString().slice(0, 10)
   const [title, setTitle] = useState('')
-  const [finishedAt, setFinishedAt] = useState(today)
+  const [finishedAt, setFinishedAt] = useState(getToday)
   const [author, setAuthor] = useState('')
   const [genre, setGenre] = useState('')
   const [rating, setRating] = useState('')
@@ -36,14 +72,26 @@ export default function AddBookForm({ open, onClose, onAdd }: Props) {
   const [searching, setSearching] = useState(false)
 
   useEffect(() => {
-    if (!open) {
-      setTitle('')
-      setFinishedAt(today)
-      setAuthor('')
-      setGenre('')
-      setRating('')
-      setMemo('')
-      setPageCount('')
+    if (open) {
+      const draft = loadDraft()
+      if (draft && draft.title) {
+        setTitle(draft.title)
+        setFinishedAt(draft.finishedAt || getToday())
+        setAuthor(draft.author)
+        setGenre(draft.genre)
+        setRating(draft.rating)
+        setMemo(draft.memo)
+        setPageCount(draft.pageCount)
+        toast('前回の入力内容を復元しました')
+      } else {
+        setTitle('')
+        setFinishedAt(getToday())
+        setAuthor('')
+        setGenre('')
+        setRating('')
+        setMemo('')
+        setPageCount('')
+      }
       setSuggestions([])
     }
   }, [open])
@@ -58,16 +106,19 @@ export default function AddBookForm({ open, onClose, onAdd }: Props) {
       const data = await res.json()
       setSuggestions(data.docs?.slice(0, 3) ?? [])
     } catch {
-      // エラー時はスキップ
+      toast.error('書籍情報の検索に失敗しました')
     } finally {
       setSearching(false)
     }
   }
 
   const applySuggestion = (s: OpenLibraryResult) => {
-    if (s.author_name?.[0]) setAuthor(s.author_name[0])
-    if (s.number_of_pages_median) setPageCount(String(s.number_of_pages_median))
+    const newAuthor = s.author_name?.[0] ?? author
+    const newPageCount = s.number_of_pages_median ? String(s.number_of_pages_median) : pageCount
+    if (s.author_name?.[0]) setAuthor(newAuthor)
+    if (s.number_of_pages_median) setPageCount(newPageCount)
     setSuggestions([])
+    saveDraft({ title, finishedAt, author: newAuthor, genre, rating, memo, pageCount: newPageCount })
     toast.success('情報を入力しました')
   }
 
@@ -77,6 +128,7 @@ export default function AddBookForm({ open, onClose, onAdd }: Props) {
       toast.error('タイトルは必須です')
       return
     }
+    const today = getToday()
     if (finishedAt > today) {
       toast.error('未来の日付は指定できません')
       return
@@ -87,11 +139,12 @@ export default function AddBookForm({ open, onClose, onAdd }: Props) {
       title: title.trim(),
       finishedAt,
       author: author.trim() || undefined,
-      genre: (genre && genre !== "small-library-item") ? genre : undefined,
-      rating: (rating && rating !== "no-rating") ? Number(rating) : undefined,
+      genre: (genre && genre !== 'small-library-item') ? genre : undefined,
+      rating: (rating && rating !== 'no-rating') ? Number(rating) : undefined,
       memo: memo.trim() || undefined,
       pageCount: pageCount ? Number(pageCount) : undefined,
     })
+    clearDraft()
     setLoading(false)
     onClose()
   }
@@ -109,7 +162,10 @@ export default function AddBookForm({ open, onClose, onAdd }: Props) {
               <Input
                 id="title"
                 value={title}
-                onChange={e => setTitle(e.target.value)}
+                onChange={e => {
+                  setTitle(e.target.value)
+                  saveDraft({ title: e.target.value, finishedAt, author, genre, rating, memo, pageCount })
+                }}
                 placeholder="本のタイトル"
                 maxLength={200}
                 required
@@ -157,8 +213,11 @@ export default function AddBookForm({ open, onClose, onAdd }: Props) {
               id="finishedAt"
               type="date"
               value={finishedAt}
-              onChange={e => setFinishedAt(e.target.value)}
-              max={today}
+              onChange={e => {
+                setFinishedAt(e.target.value)
+                saveDraft({ title, finishedAt: e.target.value, author, genre, rating, memo, pageCount })
+              }}
+              max={getToday()}
               required
               className="mt-1"
             />
@@ -169,7 +228,10 @@ export default function AddBookForm({ open, onClose, onAdd }: Props) {
             <Input
               id="author"
               value={author}
-              onChange={e => setAuthor(e.target.value)}
+              onChange={e => {
+                setAuthor(e.target.value)
+                saveDraft({ title, finishedAt, author: e.target.value, genre, rating, memo, pageCount })
+              }}
               placeholder="著者名"
               className="mt-1"
             />
@@ -177,7 +239,11 @@ export default function AddBookForm({ open, onClose, onAdd }: Props) {
 
           <div>
             <Label htmlFor="genre">ジャンル</Label>
-            <Select value={genre} onValueChange={(v) => setGenre(v === "" ? "" : (v ?? ""))}>
+            <Select value={genre} onValueChange={(v) => {
+              const val = v ?? ''
+              setGenre(val)
+              saveDraft({ title, finishedAt, author, genre: val, rating, memo, pageCount })
+            }}>
               <SelectTrigger id="genre" className="mt-1">
                 <SelectValue placeholder="ジャンルを選択" />
               </SelectTrigger>
@@ -201,7 +267,11 @@ export default function AddBookForm({ open, onClose, onAdd }: Props) {
 
           <div>
             <Label htmlFor="rating">評価</Label>
-            <Select value={rating} onValueChange={(v) => setRating(v ?? "")}>
+            <Select value={rating} onValueChange={(v) => {
+              const val = v ?? ''
+              setRating(val)
+              saveDraft({ title, finishedAt, author, genre, rating: val, memo, pageCount })
+            }}>
               <SelectTrigger id="rating" className="mt-1">
                 <SelectValue placeholder="評価を選択" />
               </SelectTrigger>
@@ -222,7 +292,10 @@ export default function AddBookForm({ open, onClose, onAdd }: Props) {
               id="pageCount"
               type="number"
               value={pageCount}
-              onChange={e => setPageCount(e.target.value)}
+              onChange={e => {
+                setPageCount(e.target.value)
+                saveDraft({ title, finishedAt, author, genre, rating, memo, pageCount: e.target.value })
+              }}
               placeholder="例: 320"
               min={1}
               className="mt-1"
@@ -234,7 +307,10 @@ export default function AddBookForm({ open, onClose, onAdd }: Props) {
             <textarea
               id="memo"
               value={memo}
-              onChange={e => setMemo(e.target.value)}
+              onChange={e => {
+                setMemo(e.target.value)
+                saveDraft({ title, finishedAt, author, genre, rating, memo: e.target.value, pageCount })
+              }}
               placeholder="感想・メモ"
               maxLength={200}
               rows={3}
@@ -245,7 +321,7 @@ export default function AddBookForm({ open, onClose, onAdd }: Props) {
           </div>
 
           <div className="flex gap-3 pt-2">
-            <Button type="button" variant="outline" onClick={onClose} className="flex-1">
+            <Button type="button" variant="outline" onClick={() => { clearDraft(); onClose() }} className="flex-1">
               キャンセル
             </Button>
             <Button
