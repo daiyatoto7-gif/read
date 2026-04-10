@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useBooks } from '@/hooks/useBooks'
+import { useBooks } from '@/lib/BooksContext'
 import { useAuth } from '@/hooks/useAuth'
 import { calculateStats, checkBadges } from '@/lib/stats'
 import { getDailyQuote } from '@/lib/quotes'
@@ -70,7 +70,7 @@ export default function DashboardPage() {
     ? Math.min(100, Math.round((stats.booksThisMonth / monthlyGoal) * 100))
     : 0
 
-  if (loading) {
+  if (loading && books.length === 0) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <p style={{ color: 'var(--color-subtext)' }}>読み込み中...</p>

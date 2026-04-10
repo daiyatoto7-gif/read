@@ -3,6 +3,7 @@ import { Noto_Sans_JP } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "next-themes";
 import { Toaster } from "@/components/ui/sonner";
+import { BooksProvider } from "@/lib/BooksContext";
 
 const notoSansJP = Noto_Sans_JP({
   variable: "--font-noto-sans-jp",
@@ -28,7 +29,9 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col" style={{ fontFamily: 'var(--font-noto-sans-jp), sans-serif' }}>
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
-          {children}
+          <BooksProvider>
+            {children}
+          </BooksProvider>
           <Toaster richColors />
         </ThemeProvider>
       </body>

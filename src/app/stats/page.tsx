@@ -1,7 +1,7 @@
 'use client'
 
 import { useMemo } from 'react'
-import { useBooks } from '@/hooks/useBooks'
+import { useBooks } from '@/lib/BooksContext'
 import { calculateStats, getMonthlyData } from '@/lib/stats'
 import Navigation from '@/components/Navigation'
 import { MonthlyBarChart, GenrePieChart, YearHeatmap } from '@/components/StatsChart'
@@ -22,7 +22,7 @@ export default function StatsPage() {
 
   const finishedDates = books.map(b => b.finishedAt)
 
-  if (loading) {
+  if (loading && books.length === 0) {
     return (
       <div className="lg:ml-60 flex items-center justify-center min-h-screen">
         <p style={{ color: 'var(--color-subtext)' }}>読み込み中...</p>
@@ -74,7 +74,9 @@ export default function StatsPage() {
         {/* 年間ヒートマップ */}
         <div className="rounded-2xl border p-4" style={{ background: 'var(--color-card)', borderColor: 'var(--color-border)' }}>
           <p className="font-semibold mb-3">読書カレンダー（今年）</p>
-          <YearHeatmap finishedDates={finishedDates} />
+          <div className="pl-5">
+            <YearHeatmap finishedDates={finishedDates} />
+          </div>
         </div>
 
         {/* ジャンル分布 */}

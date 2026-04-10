@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -70,6 +70,7 @@ export default function AddBookForm({ open, onClose, onAdd }: Props) {
   const [loading, setLoading] = useState(false)
   const [suggestions, setSuggestions] = useState<OpenLibraryResult[]>([])
   const [searching, setSearching] = useState(false)
+  const abortRef = useRef<AbortController | null>(null)
 
   useEffect(() => {
     if (open) {
@@ -98,15 +99,23 @@ export default function AddBookForm({ open, onClose, onAdd }: Props) {
 
   const searchOpenLibrary = async () => {
     if (!title.trim()) return
+    // 前のリクエストをキャンセル
+    abortRef.current?.abort()
+    const controller = new AbortController()
+    abortRef.current = controller
+
     setSearching(true)
     try {
       const res = await fetch(
-        `https://openlibrary.org/search.json?title=${encodeURIComponent(title)}&limit=3`
+        `https://openlibrary.org/search.json?title=${encodeURIComponent(title)}&limit=3`,
+        { signal: controller.signal }
       )
       const data = await res.json()
       setSuggestions(data.docs?.slice(0, 3) ?? [])
-    } catch {
-      toast.error('書籍情報の検索に失敗しました')
+    } catch (e) {
+      if ((e as Error).name !== 'AbortError') {
+        toast.error('書籍情報の検索に失敗しました')
+      }
     } finally {
       setSearching(false)
     }

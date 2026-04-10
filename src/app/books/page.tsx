@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useMemo } from 'react'
-import { useBooks } from '@/hooks/useBooks'
+import { useBooks } from '@/lib/BooksContext'
 import BookCard from '@/components/BookCard'
 import Navigation from '@/components/Navigation'
 import AddBookForm from '@/components/AddBookForm'

@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import { MonthlyData } from '@/lib/types'
 import {
   BarChart,
@@ -76,10 +77,12 @@ interface HeatmapProps {
 }
 
 export function YearHeatmap({ finishedDates }: HeatmapProps) {
+  const [tooltip, setTooltip] = useState<{ text: string; x: number; y: number } | null>(null)
+
   const now = new Date()
   const year = now.getFullYear()
+  const todayStr = `${year}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
 
-  // 日付ごとの冊数
   const dateMap = new Map<string, number>()
   finishedDates.forEach(d => {
     if (d.startsWith(String(year))) {
@@ -87,53 +90,165 @@ export function YearHeatmap({ finishedDates }: HeatmapProps) {
     }
   })
 
-  // 年初から今日までの週のグリッドを生成
-  const startOfYear = new Date(year, 0, 1)
+  const CELL = 14
+  const GAP = 3
+  const STEP = CELL + GAP
+  const TOP_OFFSET = 28
+
+  // 正午固定でDST・タイムゾーンのズレを回避
+  const startOfYear = new Date(year, 0, 1, 12, 0, 0)
   const startDay = startOfYear.getDay()
-  const daysInYear = Math.floor((now.getTime() - startOfYear.getTime()) / (1000 * 60 * 60 * 24)) + 1
+  const daysUntilToday = Math.floor((now.getTime() - startOfYear.getTime()) / (1000 * 60 * 60 * 24)) + 1
 
-  const cells: { date: string; count: number }[] = []
-  for (let i = 0; i < daysInYear; i++) {
-    const d = new Date(year, 0, i + 1)
-    const key = d.toISOString().slice(0, 10)
-    cells.push({ date: key, count: dateMap.get(key) ?? 0 })
+  type Cell = { date: string; count: number; dayOfWeek: number; week: number }
+  const cells: Cell[] = []
+  for (let i = 0; i < daysUntilToday; i++) {
+    const d = new Date(year, 0, i + 1, 12, 0, 0)
+    const dateStr = `${year}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+    const globalDay = i + startDay
+    cells.push({
+      date: dateStr,
+      count: dateMap.get(dateStr) ?? 0,
+      dayOfWeek: globalDay % 7,
+      week: Math.floor(globalDay / 7),
+    })
   }
 
-  // 週ごとに分割（先頭を埋める）
-  const paddedCells = [...Array(startDay).fill(null), ...cells]
-  const weeks: (typeof cells[0] | null)[][] = []
-  for (let i = 0; i < paddedCells.length; i += 7) {
-    weeks.push(paddedCells.slice(i, i + 7))
-  }
+  const totalWeeks = cells.length > 0 ? cells[cells.length - 1].week + 1 : 0
+  const svgWidth = totalWeeks * STEP + 4
+  const svgHeight = TOP_OFFSET + 7 * STEP
+
+  // 月ラベルの位置を計算
+  const monthLabels: { label: string; x: number }[] = []
+  let lastMonth = -1
+  cells.forEach(cell => {
+    const m = parseInt(cell.date.slice(5, 7)) - 1
+    if (m !== lastMonth) {
+      monthLabels.push({ label: `${m + 1}月`, x: cell.week * STEP })
+      lastMonth = m
+    }
+  })
 
   const getColor = (count: number) => {
     if (count === 0) return 'var(--color-border)'
     if (count === 1) return '#9DC97A'
+    if (count === 2) return '#5AB048'
     return 'var(--color-primary)'
   }
 
+  const DAYS_JA = ['日', '月', '火', '水', '木', '金', '土']
+
   return (
-    <div className="overflow-x-auto">
-      <div className="flex gap-1">
-        {weeks.map((week, wi) => (
-          <div key={wi} className="flex flex-col gap-1">
-            {week.map((cell, di) => (
-              <div
-                key={di}
-                className="w-3 h-3 rounded-sm"
-                style={{ background: cell ? getColor(cell.count) : 'transparent' }}
-                title={cell ? `${cell.date}: ${cell.count}冊` : ''}
-              />
-            ))}
-          </div>
-        ))}
+    <div>
+      <div className="overflow-x-auto pb-2">
+        <svg
+          width={svgWidth}
+          height={svgHeight}
+          style={{ display: 'block', minWidth: svgWidth }}
+        >
+          {/* 月ラベル */}
+          {monthLabels.map((ml, i) => (
+            <text
+              key={i}
+              x={ml.x}
+              y={12}
+              fontSize={10}
+              fill="var(--color-subtext)"
+              fontFamily="inherit"
+            >
+              {ml.label}
+            </text>
+          ))}
+
+          {/* 曜日ラベル（月・水・金のみ） */}
+          {[1, 3, 5].map(dow => (
+            <text
+              key={dow}
+              x={-2}
+              y={TOP_OFFSET + dow * STEP + CELL / 2 + 4}
+              fontSize={9}
+              fill="var(--color-subtext)"
+              fontFamily="inherit"
+              textAnchor="end"
+            >
+              {DAYS_JA[dow]}
+            </text>
+          ))}
+
+          {/* セル */}
+          {cells.map((cell, i) => {
+            const cx = cell.week * STEP
+            const cy = TOP_OFFSET + cell.dayOfWeek * STEP
+            const isToday = cell.date === todayStr
+            return (
+              <g key={i}>
+                <rect
+                  x={cx}
+                  y={cy}
+                  width={CELL}
+                  height={CELL}
+                  rx={3}
+                  fill={getColor(cell.count)}
+                  stroke={isToday ? 'var(--color-primary)' : 'none'}
+                  strokeWidth={isToday ? 1.5 : 0}
+                  style={{ cursor: cell.count > 0 ? 'pointer' : 'default' }}
+                  onMouseEnter={e => {
+                    const rect = (e.target as SVGRectElement).getBoundingClientRect()
+                    setTooltip({
+                      text: cell.count > 0
+                        ? `${cell.date}：${cell.count}冊`
+                        : cell.date,
+                      x: rect.left + rect.width / 2,
+                      y: rect.top - 8,
+                    })
+                  }}
+                  onMouseLeave={() => setTooltip(null)}
+                />
+              </g>
+            )
+          })}
+        </svg>
       </div>
-      <div className="flex items-center gap-2 mt-2 text-xs" style={{ color: 'var(--color-subtext)' }}>
-        <span>少</span>
-        <div className="w-3 h-3 rounded-sm" style={{ background: 'var(--color-border)' }} />
-        <div className="w-3 h-3 rounded-sm" style={{ background: '#9DC97A' }} />
-        <div className="w-3 h-3 rounded-sm" style={{ background: 'var(--color-primary)' }} />
-        <span>多</span>
+
+      {/* ツールチップ（fixed配置） */}
+      {tooltip && (
+        <div
+          style={{
+            position: 'fixed',
+            left: tooltip.x,
+            top: tooltip.y,
+            transform: 'translate(-50%, -100%)',
+            background: 'var(--color-text)',
+            color: 'var(--color-bg)',
+            fontSize: 11,
+            padding: '3px 8px',
+            borderRadius: 4,
+            pointerEvents: 'none',
+            zIndex: 100,
+            whiteSpace: 'nowrap',
+          }}
+        >
+          {tooltip.text}
+        </div>
+      )}
+
+      {/* 凡例 */}
+      <div className="flex items-center gap-2 mt-3 text-xs" style={{ color: 'var(--color-subtext)' }}>
+        <span>少ない</span>
+        {[0, 1, 2, 3].map(level => (
+          <div
+            key={level}
+            style={{
+              width: 12,
+              height: 12,
+              borderRadius: 3,
+              background: getColor(level),
+              border: '1px solid var(--color-border)',
+            }}
+          />
+        ))}
+        <span>多い</span>
+        <span style={{ marginLeft: 8 }}>今年の読了日をマークしています</span>
       </div>
     </div>
   )

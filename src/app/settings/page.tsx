@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useAuth } from '@/hooks/useAuth'
-import { useBooks } from '@/hooks/useBooks'
+import { useBooks } from '@/lib/BooksContext'
 import { BADGE_DEFINITIONS } from '@/lib/badges'
 import { createClient } from '@/lib/supabase/client'
 import { checkBadges } from '@/lib/stats'
