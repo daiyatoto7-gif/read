@@ -87,8 +87,8 @@ export default function AddBookForm({ open, onClose, onAdd }: Props) {
       title: title.trim(),
       finishedAt,
       author: author.trim() || undefined,
-      genre: genre || undefined,
-      rating: rating ? Number(rating) : undefined,
+      genre: (genre && genre !== "small-library-item") ? genre : undefined,
+      rating: (rating && rating !== "no-rating") ? Number(rating) : undefined,
       memo: memo.trim() || undefined,
       pageCount: pageCount ? Number(pageCount) : undefined,
     })
@@ -177,12 +177,12 @@ export default function AddBookForm({ open, onClose, onAdd }: Props) {
 
           <div>
             <Label htmlFor="genre">ジャンル</Label>
-            <Select value={genre} onValueChange={(v) => setGenre(v ?? "")}>
+            <Select value={genre} onValueChange={(v) => setGenre(v === "" ? "" : (v ?? ""))}>
               <SelectTrigger id="genre" className="mt-1">
                 <SelectValue placeholder="ジャンルを選択" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="small-library-item">ジャンルなし</SelectItem>
+                <SelectItem value="">ジャンルなし</SelectItem>
                 <SelectItem value="小説">小説</SelectItem>
                 <SelectItem value="ビジネス">ビジネス</SelectItem>
                 <SelectItem value="自己啓発">自己啓発</SelectItem>
@@ -206,7 +206,7 @@ export default function AddBookForm({ open, onClose, onAdd }: Props) {
                 <SelectValue placeholder="評価を選択" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="no-rating">評価なし</SelectItem>
+                <SelectItem value="">評価なし</SelectItem>
                 <SelectItem value="5">⭐⭐⭐⭐⭐ 5</SelectItem>
                 <SelectItem value="4">⭐⭐⭐⭐ 4</SelectItem>
                 <SelectItem value="3">⭐⭐⭐ 3</SelectItem>

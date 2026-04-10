@@ -151,7 +151,10 @@ export function checkBadges(books: Book[]): string[] {
 
   const booksThisMonth = books.filter(b => b.finishedAt.startsWith(currentMonth)).length
   if (booksThisMonth >= 5) earned.push('monthly_5')
-  if (booksThisMonth >= 3) earned.push('speed_3')
+
+  // speed_3: 過去12ヶ月いずれかの月で3冊以上
+  const monthlyCounts = getMonthlyData(books, 12)
+  if (monthlyCounts.some(m => m.count >= 3)) earned.push('speed_3')
 
   const booksThisYear = books.filter(b => b.finishedAt.startsWith(String(currentYear))).length
   if (booksThisYear >= 24) earned.push('annual_24')

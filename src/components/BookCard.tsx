@@ -43,8 +43,8 @@ export default function BookCard({ book, onUpdate, onDelete }: Props) {
       title,
       finishedAt,
       author: author || undefined,
-      genre: genre || undefined,
-      rating: rating ? Number(rating) : undefined,
+      genre: (genre && genre !== "none") ? genre : undefined,
+      rating: (rating && rating !== "none") ? Number(rating) : undefined,
       memo: memo || undefined,
       pageCount: pageCount ? Number(pageCount) : undefined,
     })
@@ -66,12 +66,19 @@ export default function BookCard({ book, onUpdate, onDelete }: Props) {
         onClick={() => setOpen(true)}
       >
         <div className="flex gap-3">
-          {book.coverUrl && (
+          {book.coverUrl ? (
             <img
               src={book.coverUrl}
               alt={book.title}
               className="w-12 h-16 object-cover rounded-lg shrink-0"
             />
+          ) : (
+            <div
+              className="w-12 h-16 rounded-lg shrink-0 flex items-center justify-center text-xl"
+              style={{ background: 'var(--color-border)' }}
+            >
+              📖
+            </div>
           )}
           <div className="flex-1 min-w-0">
             <h3 className="font-semibold truncate" style={{ color: 'var(--color-text)' }}>{book.title}</h3>
@@ -168,7 +175,7 @@ export default function BookCard({ book, onUpdate, onDelete }: Props) {
                     <SelectValue placeholder="ジャンルを選択" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="none">ジャンルなし</SelectItem>
+                    <SelectItem value="">ジャンルなし</SelectItem>
                     <SelectItem value="小説">小説</SelectItem>
                     <SelectItem value="ビジネス">ビジネス</SelectItem>
                     <SelectItem value="自己啓発">自己啓発</SelectItem>
@@ -191,7 +198,7 @@ export default function BookCard({ book, onUpdate, onDelete }: Props) {
                     <SelectValue placeholder="評価を選択" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="none">評価なし</SelectItem>
+                    <SelectItem value="">評価なし</SelectItem>
                     <SelectItem value="5">⭐⭐⭐⭐⭐ 5</SelectItem>
                     <SelectItem value="4">⭐⭐⭐⭐ 4</SelectItem>
                     <SelectItem value="3">⭐⭐⭐ 3</SelectItem>

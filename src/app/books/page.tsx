@@ -61,12 +61,25 @@ export default function BooksPage() {
 
         {/* 検索・フィルター */}
         <div className="space-y-2">
-          <Input
-            placeholder="タイトル・著者で検索..."
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-          />
-          <div className="flex gap-2">
+          <div className="relative">
+            <Input
+              placeholder="タイトル・著者で検索..."
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              className="pr-8"
+            />
+            {search && (
+              <button
+                onClick={() => setSearch('')}
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-sm"
+                style={{ color: 'var(--color-subtext)' }}
+                aria-label="検索をクリア"
+              >
+                ✕
+              </button>
+            )}
+          </div>
+          <div className="flex gap-2 flex-wrap items-center">
             <Select value={sortBy} onValueChange={(v) => setSortBy(v ?? 'date_desc')}>
               <SelectTrigger className="flex-1">
                 <SelectValue />
@@ -100,6 +113,19 @@ export default function BooksPage() {
                 <SelectItem value="1">⭐1</SelectItem>
               </SelectContent>
             </Select>
+            {(filterGenre || filterRating || sortBy !== 'date_desc') && (
+              <button
+                onClick={() => {
+                  setFilterGenre('')
+                  setFilterRating('')
+                  setSortBy('date_desc')
+                }}
+                className="text-xs px-3 py-1 rounded-full border transition-colors shrink-0"
+                style={{ color: 'var(--color-subtext)', borderColor: 'var(--color-border)' }}
+              >
+                リセット
+              </button>
+            )}
           </div>
         </div>
 
