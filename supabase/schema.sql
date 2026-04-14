@@ -15,7 +15,9 @@ create table public.books (
   id uuid primary key default gen_random_uuid(),
   user_id uuid references auth.users(id) on delete cascade not null,
   title text not null,                       -- タイトル（必須）
-  finished_at date not null,                 -- 読了日（必須）
+  status text not null default 'finished' check (status in ('reading', 'finished')), -- 読書ステータス
+  started_at date default null,              -- 読書開始日
+  finished_at date default null,             -- 読了日（読書中は null）
   author text default null,                  -- 著者名
   genre text default null,                   -- ジャンル
   rating integer default null check (rating between 1 and 5), -- 評価
@@ -60,3 +62,12 @@ create trigger books_updated_at before update on public.books
 
 create trigger settings_updated_at before update on public.user_settings
   for each row execute function update_updated_at();
+
+-- 既存テーブルへの移行用（既にテーブルが存在する場合）
+ALTER TABLE public.books
+  ADD COLUMN IF NOT EXISTS status text NOT NULL DEFAULT 'finished'
+    CHECK (status IN ('reading', 'finished')),
+  ADD COLUMN IF NOT EXISTS started_at date DEFAULT NULL;
+
+ALTER TABLE public.books
+  ALTER COLUMN finished_at DROP NOT NULL;

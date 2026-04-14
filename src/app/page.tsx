@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useBooks } from '@/lib/BooksContext'
 import { useAuth } from '@/hooks/useAuth'
 import { calculateStats, checkBadges } from '@/lib/stats'
@@ -25,6 +25,13 @@ export default function DashboardPage() {
 
   const stats = calculateStats(books)
   const quote = getDailyQuote()
+
+  // 読書中→読了の順で並び替えた最近の本
+  const recentBooks = useMemo(() => {
+    const reading = books.filter(b => b.status === 'reading')
+    const finished = books.filter(b => b.status === 'finished')
+    return [...reading, ...finished].slice(0, 3)
+  }, [books])
 
   useEffect(() => {
     if (!user) return
@@ -109,6 +116,16 @@ export default function DashboardPage() {
           )}
         </div>
 
+        {/* 現在読んでいる本 */}
+        {stats.booksReading > 0 && (
+          <div className="rounded-2xl border p-4" style={{ background: 'var(--color-card)', borderColor: 'var(--color-border)' }}>
+            <p className="font-semibold">現在読んでいる本</p>
+            <p className="text-2xl font-bold mt-1" style={{ color: 'var(--color-primary)' }}>
+              {stats.booksReading}<span className="text-sm font-normal">冊</span>
+            </p>
+          </div>
+        )}
+
         {/* ストリーク */}
         <StreakBadge currentStreak={stats.currentStreak} longestStreak={stats.longestStreak} />
 
@@ -133,9 +150,9 @@ export default function DashboardPage() {
           <MonthlyBarChart data={stats.monthlyData} />
         </div>
 
-        {/* 最近読んだ本 */}
+        {/* 最近読んだ本（読書中優先） */}
         <div>
-          <p className="font-semibold mb-3">最近読んだ本</p>
+          <p className="font-semibold mb-3">最近の本</p>
           {books.length === 0 ? (
             <div className="rounded-2xl border p-8 text-center" style={{ background: 'var(--color-card)', borderColor: 'var(--color-border)' }}>
               <p className="text-4xl mb-2">📖</p>
@@ -144,7 +161,7 @@ export default function DashboardPage() {
             </div>
           ) : (
             <div className="space-y-3">
-              {books.slice(0, 3).map(book => (
+              {recentBooks.map(book => (
                 <BookCard key={book.id} book={book} onUpdate={updateBook} onDelete={deleteBook} />
               ))}
             </div>

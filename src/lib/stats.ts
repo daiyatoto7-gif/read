@@ -12,14 +12,15 @@ function getWeekKey(date: Date): string {
 }
 
 /**
- * 週単位のストリークを計算
+ * 週単位のストリークを計算（読了済みの本のみ対象）
  */
 export function calculateStreak(books: Book[]): { current: number; longest: number } {
-  if (books.length === 0) return { current: 0, longest: 0 }
+  const finishedBooks = books.filter(b => b.status === 'finished' && b.finishedAt)
+  if (finishedBooks.length === 0) return { current: 0, longest: 0 }
 
   const weekSet = new Set<string>()
-  books.forEach(book => {
-    const date = new Date(book.finishedAt)
+  finishedBooks.forEach(book => {
+    const date = new Date(book.finishedAt!)
     weekSet.add(getWeekKey(date))
   })
 
@@ -67,16 +68,17 @@ export function calculateStreak(books: Book[]): { current: number; longest: numb
 }
 
 /**
- * 月別読了数を計算
+ * 月別読了数を計算（読了済みの本のみ）
  */
 export function getMonthlyData(books: Book[], months: number = 12): MonthlyData[] {
   const result: MonthlyData[] = []
   const now = new Date()
+  const finishedBooks = books.filter(b => b.status === 'finished' && b.finishedAt)
 
   for (let i = months - 1; i >= 0; i--) {
     const date = new Date(now.getFullYear(), now.getMonth() - i, 1)
     const month = date.toISOString().slice(0, 7)
-    const count = books.filter(b => b.finishedAt.startsWith(month)).length
+    const count = finishedBooks.filter(b => b.finishedAt!.startsWith(month)).length
     result.push({ month, count })
   }
 
@@ -91,8 +93,11 @@ export function calculateStats(books: Book[]): UserStats {
   const currentYear = now.getFullYear()
   const currentMonth = now.toISOString().slice(0, 7)
 
-  const booksThisYear = books.filter(b => b.finishedAt.startsWith(String(currentYear))).length
-  const booksThisMonth = books.filter(b => b.finishedAt.startsWith(currentMonth)).length
+  const finishedBooks = books.filter(b => b.status === 'finished' && b.finishedAt)
+  const booksReading = books.filter(b => b.status === 'reading').length
+
+  const booksThisYear = finishedBooks.filter(b => b.finishedAt!.startsWith(String(currentYear))).length
+  const booksThisMonth = finishedBooks.filter(b => b.finishedAt!.startsWith(currentMonth)).length
 
   const { current: currentStreak, longest: longestStreak } = calculateStreak(books)
 
@@ -108,9 +113,9 @@ export function calculateStats(books: Book[]): UserStats {
     ? Math.round((monthlyData.reduce((sum, m) => sum + m.count, 0) / 12) * 10) / 10
     : 0
 
-  // お気に入りジャンル
+  // お気に入りジャンル（読了本のみ）
   const genreCount = new Map<string, number>()
-  books.forEach(b => {
+  finishedBooks.forEach(b => {
     if (b.genre) genreCount.set(b.genre, (genreCount.get(b.genre) ?? 0) + 1)
   })
   let favoriteGenre: string | null = null
@@ -123,7 +128,8 @@ export function calculateStats(books: Book[]): UserStats {
   })
 
   return {
-    totalBooks: books.length,
+    totalBooks: finishedBooks.length,
+    booksReading,
     booksThisYear,
     booksThisMonth,
     currentStreak,
@@ -144,19 +150,21 @@ export function checkBadges(books: Book[]): string[] {
   const currentMonth = now.toISOString().slice(0, 7)
   const currentYear = now.getFullYear()
 
-  if (books.length >= 1) earned.push('first_book')
-  if (books.length >= 3) earned.push('books_3')
-  if (books.length >= 10) earned.push('books_10')
-  if (books.length >= 50) earned.push('books_50')
+  const finishedBooks = books.filter(b => b.status === 'finished' && b.finishedAt)
 
-  const booksThisMonth = books.filter(b => b.finishedAt.startsWith(currentMonth)).length
+  if (finishedBooks.length >= 1) earned.push('first_book')
+  if (finishedBooks.length >= 3) earned.push('books_3')
+  if (finishedBooks.length >= 10) earned.push('books_10')
+  if (finishedBooks.length >= 50) earned.push('books_50')
+
+  const booksThisMonth = finishedBooks.filter(b => b.finishedAt!.startsWith(currentMonth)).length
   if (booksThisMonth >= 5) earned.push('monthly_5')
 
   // speed_3: 過去12ヶ月いずれかの月で3冊以上
   const monthlyCounts = getMonthlyData(books, 12)
   if (monthlyCounts.some(m => m.count >= 3)) earned.push('speed_3')
 
-  const booksThisYear = books.filter(b => b.finishedAt.startsWith(String(currentYear))).length
+  const booksThisYear = finishedBooks.filter(b => b.finishedAt!.startsWith(String(currentYear))).length
   if (booksThisYear >= 24) earned.push('annual_24')
 
   const { current } = calculateStreak(books)

@@ -3,7 +3,9 @@ export interface BookRow {
   id: string;
   user_id: string;
   title: string;
-  finished_at: string;       // YYYY-MM-DD
+  status: 'reading' | 'finished';
+  started_at: string | null;
+  finished_at: string | null;  // 読書中は null
   author: string | null;
   genre: string | null;
   rating: number | null;
@@ -19,7 +21,9 @@ export interface Book {
   id: string;
   userId: string;
   title: string;
-  finishedAt: string;
+  status: 'reading' | 'finished';
+  startedAt?: string;
+  finishedAt: string | null;   // 読書中は null
   author?: string;
   genre?: string;
   rating?: 1 | 2 | 3 | 4 | 5;
@@ -33,7 +37,9 @@ export interface Book {
 // 新規登録時の入力
 export interface AddBookInput {
   title: string;             // 必須
-  finishedAt: string;        // 必須（デフォルト: 今日）
+  status?: 'reading' | 'finished';
+  startedAt?: string;
+  finishedAt?: string | null;
   author?: string;
   genre?: string;
   rating?: number;
@@ -67,6 +73,7 @@ export interface MonthlyData {
 
 export interface UserStats {
   totalBooks: number;
+  booksReading: number;
   booksThisYear: number;
   booksThisMonth: number;
   currentStreak: number;
@@ -83,6 +90,8 @@ export function rowToBook(row: BookRow): Book {
     id: row.id,
     userId: row.user_id,
     title: row.title,
+    status: row.status ?? 'finished',
+    startedAt: row.started_at ?? undefined,
     finishedAt: row.finished_at,
     author: row.author ?? undefined,
     genre: row.genre ?? undefined,

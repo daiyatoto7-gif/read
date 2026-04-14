@@ -26,6 +26,8 @@ const DRAFT_KEY = 'booklog_draft'
 
 interface Draft {
   title: string
+  status: 'reading' | 'finished'
+  startedAt: string
   finishedAt: string
   author: string
   genre: string
@@ -60,7 +62,9 @@ const loadDraft = (): Draft | null => {
 }
 
 export default function AddBookForm({ open, onClose, onAdd }: Props) {
+  const [status, setStatus] = useState<'reading' | 'finished'>('finished')
   const [title, setTitle] = useState('')
+  const [startedAt, setStartedAt] = useState(getToday)
   const [finishedAt, setFinishedAt] = useState(getToday)
   const [author, setAuthor] = useState('')
   const [genre, setGenre] = useState('')
@@ -77,6 +81,8 @@ export default function AddBookForm({ open, onClose, onAdd }: Props) {
       const draft = loadDraft()
       if (draft && draft.title) {
         setTitle(draft.title)
+        setStatus(draft.status ?? 'finished')
+        setStartedAt(draft.startedAt || getToday())
         setFinishedAt(draft.finishedAt || getToday())
         setAuthor(draft.author)
         setGenre(draft.genre)
@@ -86,6 +92,8 @@ export default function AddBookForm({ open, onClose, onAdd }: Props) {
         toast('前回の入力内容を復元しました')
       } else {
         setTitle('')
+        setStatus('finished')
+        setStartedAt(getToday())
         setFinishedAt(getToday())
         setAuthor('')
         setGenre('')
@@ -96,6 +104,10 @@ export default function AddBookForm({ open, onClose, onAdd }: Props) {
       setSuggestions([])
     }
   }, [open])
+
+  const getDraft = (): Draft => ({
+    title, status, startedAt, finishedAt, author, genre, rating, memo, pageCount
+  })
 
   const searchOpenLibrary = async () => {
     if (!title.trim()) return
@@ -127,7 +139,7 @@ export default function AddBookForm({ open, onClose, onAdd }: Props) {
     if (s.author_name?.[0]) setAuthor(newAuthor)
     if (s.number_of_pages_median) setPageCount(newPageCount)
     setSuggestions([])
-    saveDraft({ title, finishedAt, author: newAuthor, genre, rating, memo, pageCount: newPageCount })
+    saveDraft({ ...getDraft(), author: newAuthor, pageCount: newPageCount })
     toast.success('情報を入力しました')
   }
 
@@ -138,15 +150,23 @@ export default function AddBookForm({ open, onClose, onAdd }: Props) {
       return
     }
     const today = getToday()
-    if (finishedAt > today) {
-      toast.error('未来の日付は指定できません')
-      return
+    if (status === 'finished') {
+      if (!finishedAt) {
+        toast.error('読了日は必須です')
+        return
+      }
+      if (finishedAt > today) {
+        toast.error('未来の日付は指定できません')
+        return
+      }
     }
 
     setLoading(true)
     await onAdd({
       title: title.trim(),
-      finishedAt,
+      status,
+      startedAt: startedAt || undefined,
+      finishedAt: status === 'finished' ? finishedAt : null,
       author: author.trim() || undefined,
       genre: (genre && genre !== 'small-library-item') ? genre : undefined,
       rating: (rating && rating !== 'no-rating') ? Number(rating) : undefined,
@@ -162,9 +182,31 @@ export default function AddBookForm({ open, onClose, onAdd }: Props) {
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>📚 読了記録を追加</DialogTitle>
+          <DialogTitle>📚 読書記録を追加</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4 mt-2">
+
+          {/* ステータス切替トグル */}
+          <div className="flex rounded-xl overflow-hidden border" style={{ borderColor: 'var(--color-border)' }}>
+            {(['reading', 'finished'] as const).map((s) => (
+              <button
+                key={s}
+                type="button"
+                onClick={() => {
+                  setStatus(s)
+                  saveDraft({ ...getDraft(), status: s })
+                }}
+                className="flex-1 py-2.5 text-sm font-medium transition-colors"
+                style={status === s
+                  ? { background: 'var(--color-primary)', color: 'white' }
+                  : { background: 'var(--color-card)', color: 'var(--color-subtext)' }
+                }
+              >
+                {s === 'reading' ? '📖 読書中' : '✅ 読了'}
+              </button>
+            ))}
+          </div>
+
           <div>
             <Label htmlFor="title">タイトル *</Label>
             <div className="flex gap-2 mt-1">
@@ -173,7 +215,7 @@ export default function AddBookForm({ open, onClose, onAdd }: Props) {
                 value={title}
                 onChange={e => {
                   setTitle(e.target.value)
-                  saveDraft({ title: e.target.value, finishedAt, author, genre, rating, memo, pageCount })
+                  saveDraft({ ...getDraft(), title: e.target.value })
                 }}
                 placeholder="本のタイトル"
                 maxLength={200}
@@ -216,21 +258,38 @@ export default function AddBookForm({ open, onClose, onAdd }: Props) {
             </div>
           )}
 
-          <div>
-            <Label htmlFor="finishedAt">読了日 *</Label>
-            <Input
-              id="finishedAt"
-              type="date"
-              value={finishedAt}
-              onChange={e => {
-                setFinishedAt(e.target.value)
-                saveDraft({ title, finishedAt: e.target.value, author, genre, rating, memo, pageCount })
-              }}
-              max={getToday()}
-              required
-              className="mt-1"
-            />
-          </div>
+          {status === 'reading' ? (
+            <div>
+              <Label htmlFor="startedAt">開始日</Label>
+              <Input
+                id="startedAt"
+                type="date"
+                value={startedAt}
+                onChange={e => {
+                  setStartedAt(e.target.value)
+                  saveDraft({ ...getDraft(), startedAt: e.target.value })
+                }}
+                max={getToday()}
+                className="mt-1"
+              />
+            </div>
+          ) : (
+            <div>
+              <Label htmlFor="finishedAt">読了日 *</Label>
+              <Input
+                id="finishedAt"
+                type="date"
+                value={finishedAt}
+                onChange={e => {
+                  setFinishedAt(e.target.value)
+                  saveDraft({ ...getDraft(), finishedAt: e.target.value })
+                }}
+                max={getToday()}
+                required
+                className="mt-1"
+              />
+            </div>
+          )}
 
           <div>
             <Label htmlFor="author">著者</Label>
@@ -239,7 +298,7 @@ export default function AddBookForm({ open, onClose, onAdd }: Props) {
               value={author}
               onChange={e => {
                 setAuthor(e.target.value)
-                saveDraft({ title, finishedAt, author: e.target.value, genre, rating, memo, pageCount })
+                saveDraft({ ...getDraft(), author: e.target.value })
               }}
               placeholder="著者名"
               className="mt-1"
@@ -251,7 +310,7 @@ export default function AddBookForm({ open, onClose, onAdd }: Props) {
             <Select value={genre} onValueChange={(v) => {
               const val = v ?? ''
               setGenre(val)
-              saveDraft({ title, finishedAt, author, genre: val, rating, memo, pageCount })
+              saveDraft({ ...getDraft(), genre: val })
             }}>
               <SelectTrigger id="genre" className="mt-1">
                 <SelectValue placeholder="ジャンルを選択" />
@@ -279,7 +338,7 @@ export default function AddBookForm({ open, onClose, onAdd }: Props) {
             <Select value={rating} onValueChange={(v) => {
               const val = v ?? ''
               setRating(val)
-              saveDraft({ title, finishedAt, author, genre, rating: val, memo, pageCount })
+              saveDraft({ ...getDraft(), rating: val })
             }}>
               <SelectTrigger id="rating" className="mt-1">
                 <SelectValue placeholder="評価を選択" />
@@ -303,7 +362,7 @@ export default function AddBookForm({ open, onClose, onAdd }: Props) {
               value={pageCount}
               onChange={e => {
                 setPageCount(e.target.value)
-                saveDraft({ title, finishedAt, author, genre, rating, memo, pageCount: e.target.value })
+                saveDraft({ ...getDraft(), pageCount: e.target.value })
               }}
               placeholder="例: 320"
               min={1}
@@ -318,7 +377,7 @@ export default function AddBookForm({ open, onClose, onAdd }: Props) {
               value={memo}
               onChange={e => {
                 setMemo(e.target.value)
-                saveDraft({ title, finishedAt, author, genre, rating, memo: e.target.value, pageCount })
+                saveDraft({ ...getDraft(), memo: e.target.value })
               }}
               placeholder="感想・メモ"
               maxLength={2000}

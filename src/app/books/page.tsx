@@ -16,7 +16,10 @@ export default function BooksPage() {
   const [sortBy, setSortBy] = useState('date_desc')
   const [filterGenre, setFilterGenre] = useState('')
   const [filterRating, setFilterRating] = useState('')
+  const [filterStatus, setFilterStatus] = useState<'all' | 'reading' | 'finished'>('all')
   const [showAddForm, setShowAddForm] = useState(false)
+
+  const readingCount = useMemo(() => books.filter(b => b.status === 'reading').length, [books])
 
   const filtered = useMemo(() => {
     let result = [...books]
@@ -29,26 +32,39 @@ export default function BooksPage() {
       )
     }
 
+    if (filterStatus !== 'all') result = result.filter(b => b.status === filterStatus)
     if (filterGenre) result = result.filter(b => b.genre === filterGenre)
     if (filterRating) result = result.filter(b => b.rating === Number(filterRating))
 
+    // 読書中を先頭に、その後ソート
+    const reading = result.filter(b => b.status === 'reading')
+    const finished = result.filter(b => b.status === 'finished')
+
     switch (sortBy) {
       case 'date_desc':
-        result.sort((a, b) => b.finishedAt.localeCompare(a.finishedAt))
+        reading.sort((a, b) => (b.startedAt ?? '').localeCompare(a.startedAt ?? ''))
+        finished.sort((a, b) => (b.finishedAt ?? '').localeCompare(a.finishedAt ?? ''))
         break
       case 'date_asc':
-        result.sort((a, b) => a.finishedAt.localeCompare(b.finishedAt))
+        reading.sort((a, b) => (a.startedAt ?? '').localeCompare(b.startedAt ?? ''))
+        finished.sort((a, b) => (a.finishedAt ?? '').localeCompare(b.finishedAt ?? ''))
         break
       case 'title':
-        result.sort((a, b) => a.title.localeCompare(b.title, 'ja'))
+        reading.sort((a, b) => a.title.localeCompare(b.title, 'ja'))
+        finished.sort((a, b) => a.title.localeCompare(b.title, 'ja'))
         break
       case 'rating':
-        result.sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0))
+        reading.sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0))
+        finished.sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0))
         break
     }
 
-    return result
-  }, [books, search, sortBy, filterGenre, filterRating])
+    return filterStatus === 'finished' ? finished
+      : filterStatus === 'reading' ? reading
+      : [...reading, ...finished]
+  }, [books, search, sortBy, filterGenre, filterRating, filterStatus])
+
+  const hasActiveFilters = filterGenre || filterRating || filterStatus !== 'all' || sortBy !== 'date_desc'
 
   return (
     <div className="lg:ml-60 pb-20 lg:pb-0">
@@ -56,7 +72,30 @@ export default function BooksPage() {
       <main className="max-w-2xl mx-auto p-4 space-y-4">
         <div className="flex items-center justify-between pt-4">
           <h1 className="text-xl font-bold" style={{ color: 'var(--color-text)' }}>本棚</h1>
-          <span className="text-sm" style={{ color: 'var(--color-subtext)' }}>全{books.length}冊</span>
+          <div className="flex items-center gap-3 text-sm" style={{ color: 'var(--color-subtext)' }}>
+            {readingCount > 0 && (
+              <span style={{ color: 'var(--color-primary)' }}>📖 読書中: {readingCount}冊</span>
+            )}
+            <span>全{books.length}冊</span>
+          </div>
+        </div>
+
+        {/* ステータスフィルタ */}
+        <div className="flex rounded-xl overflow-hidden border" style={{ borderColor: 'var(--color-border)' }}>
+          {([['all', 'すべて'], ['reading', '📖 読書中'], ['finished', '✅ 読了']] as const).map(([val, label]) => (
+            <button
+              key={val}
+              type="button"
+              onClick={() => setFilterStatus(val)}
+              className="flex-1 py-2 text-sm font-medium transition-colors"
+              style={filterStatus === val
+                ? { background: 'var(--color-primary)', color: 'white' }
+                : { background: 'var(--color-card)', color: 'var(--color-subtext)' }
+              }
+            >
+              {label}
+            </button>
+          ))}
         </div>
 
         {/* 検索・フィルター */}
@@ -85,8 +124,8 @@ export default function BooksPage() {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="date_desc">読了日（新しい順）</SelectItem>
-                <SelectItem value="date_asc">読了日（古い順）</SelectItem>
+                <SelectItem value="date_desc">日付（新しい順）</SelectItem>
+                <SelectItem value="date_asc">日付（古い順）</SelectItem>
                 <SelectItem value="title">タイトル（50音順）</SelectItem>
                 <SelectItem value="rating">評価順</SelectItem>
               </SelectContent>
@@ -113,11 +152,12 @@ export default function BooksPage() {
                 <SelectItem value="1">⭐1</SelectItem>
               </SelectContent>
             </Select>
-            {(filterGenre || filterRating || sortBy !== 'date_desc') && (
+            {hasActiveFilters && (
               <button
                 onClick={() => {
                   setFilterGenre('')
                   setFilterRating('')
+                  setFilterStatus('all')
                   setSortBy('date_desc')
                 }}
                 className="text-xs px-3 py-1 rounded-full border transition-colors shrink-0"

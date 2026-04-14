@@ -29,7 +29,7 @@ export default function BookCard({ book, onUpdate, onDelete }: Props) {
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [editing, setEditing] = useState(false)
   const [title, setTitle] = useState(book.title)
-  const [finishedAt, setFinishedAt] = useState(book.finishedAt)
+  const [finishedAt, setFinishedAt] = useState(book.finishedAt ?? '')
   const [author, setAuthor] = useState(book.author ?? '')
   const [genre, setGenre] = useState(book.genre ?? '')
   const [rating, setRating] = useState(book.rating ? String(book.rating) : '')
@@ -41,7 +41,7 @@ export default function BookCard({ book, onUpdate, onDelete }: Props) {
   const handleSave = async () => {
     await onUpdate(book.id, {
       title,
-      finishedAt,
+      finishedAt: finishedAt || null,
       author: author || undefined,
       genre: (genre && genre !== "none") ? genre : undefined,
       rating: (rating && rating !== "none") ? Number(rating) : undefined,
@@ -57,6 +57,16 @@ export default function BookCard({ book, onUpdate, onDelete }: Props) {
     setConfirmDelete(false)
     setOpen(false)
   }
+
+  const handleMarkFinished = async () => {
+    await onUpdate(book.id, {
+      status: 'finished',
+      finishedAt: today,
+    })
+    setOpen(false)
+  }
+
+  const isReading = book.status === 'reading'
 
   return (
     <>
@@ -86,7 +96,16 @@ export default function BookCard({ book, onUpdate, onDelete }: Props) {
               <p className="text-sm truncate" style={{ color: 'var(--color-subtext)' }}>{book.author}</p>
             )}
             <div className="flex items-center gap-2 mt-1 flex-wrap">
-              <span className="text-xs" style={{ color: 'var(--color-subtext)' }}>{book.finishedAt}</span>
+              {isReading ? (
+                <span
+                  className="text-xs px-2 py-0.5 rounded-full font-medium"
+                  style={{ background: 'var(--color-primary)', color: 'white' }}
+                >
+                  📖 読書中
+                </span>
+              ) : (
+                <span className="text-xs" style={{ color: 'var(--color-subtext)' }}>{book.finishedAt}</span>
+              )}
               {book.rating && <StarRating rating={book.rating} />}
               {book.genre && (
                 <Badge variant="secondary" className="text-xs">{book.genre}</Badge>
@@ -112,9 +131,24 @@ export default function BookCard({ book, onUpdate, onDelete }: Props) {
                 <p className="font-semibold">{book.title}</p>
               </div>
               <div>
-                <p className="text-xs font-medium" style={{ color: 'var(--color-subtext)' }}>読了日</p>
-                <p>{book.finishedAt}</p>
+                <p className="text-xs font-medium" style={{ color: 'var(--color-subtext)' }}>ステータス</p>
+                {isReading ? (
+                  <span
+                    className="text-sm px-2 py-0.5 rounded-full font-medium inline-block"
+                    style={{ background: 'var(--color-primary)', color: 'white' }}
+                  >
+                    📖 読書中
+                  </span>
+                ) : (
+                  <p>✅ 読了{book.finishedAt ? `（${book.finishedAt}）` : ''}</p>
+                )}
               </div>
+              {book.startedAt && (
+                <div>
+                  <p className="text-xs font-medium" style={{ color: 'var(--color-subtext)' }}>開始日</p>
+                  <p>{book.startedAt}</p>
+                </div>
+              )}
               {book.author && (
                 <div>
                   <p className="text-xs font-medium" style={{ color: 'var(--color-subtext)' }}>著者</p>
@@ -145,13 +179,24 @@ export default function BookCard({ book, onUpdate, onDelete }: Props) {
                   <p className="text-sm whitespace-pre-wrap">{book.memo}</p>
                 </div>
               )}
-              <div className="flex gap-3 pt-4">
-                <Button onClick={() => setEditing(true)} className="flex-1" style={{ background: 'var(--color-primary)', color: 'white' }}>
-                  編集
-                </Button>
-                <Button variant="destructive" onClick={() => setConfirmDelete(true)} className="flex-1">
-                  削除
-                </Button>
+              <div className="flex flex-col gap-3 pt-4">
+                {isReading && (
+                  <Button
+                    onClick={handleMarkFinished}
+                    className="w-full"
+                    style={{ background: 'var(--color-accent)', color: 'white' }}
+                  >
+                    ✅ 読了にする
+                  </Button>
+                )}
+                <div className="flex gap-3">
+                  <Button onClick={() => setEditing(true)} className="flex-1" style={{ background: 'var(--color-primary)', color: 'white' }}>
+                    編集
+                  </Button>
+                  <Button variant="destructive" onClick={() => setConfirmDelete(true)} className="flex-1">
+                    削除
+                  </Button>
+                </div>
               </div>
             </div>
           ) : (

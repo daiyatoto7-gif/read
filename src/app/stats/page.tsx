@@ -14,13 +14,15 @@ export default function StatsPage() {
 
   const genreData = useMemo(() => {
     const map = new Map<string, number>()
-    books.forEach(b => {
+    books.filter(b => b.status === 'finished').forEach(b => {
       if (b.genre) map.set(b.genre, (map.get(b.genre) ?? 0) + 1)
     })
     return Array.from(map.entries()).map(([name, value]) => ({ name, value }))
   }, [books])
 
-  const finishedDates = books.map(b => b.finishedAt)
+  const finishedDates = books
+    .filter(b => b.status === 'finished' && b.finishedAt)
+    .map(b => b.finishedAt!)
 
   if (loading && books.length === 0) {
     return (
@@ -39,7 +41,8 @@ export default function StatsPage() {
         {/* サマリーカード */}
         <div className="grid grid-cols-2 gap-3">
           {[
-            { label: '総冊数', value: stats.totalBooks, unit: '冊' },
+            { label: '読書中', value: stats.booksReading, unit: '冊' },
+            { label: '総読了数', value: stats.totalBooks, unit: '冊' },
             { label: '今年', value: stats.booksThisYear, unit: '冊' },
             { label: '今月', value: stats.booksThisMonth, unit: '冊' },
             { label: '月平均', value: stats.averageBooksPerMonth, unit: '冊' },

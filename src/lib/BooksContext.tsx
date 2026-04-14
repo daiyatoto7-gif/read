@@ -35,7 +35,7 @@ export function BooksProvider({ children }: { children: ReactNode }) {
       .from('books')
       .select('*')
       .eq('user_id', user.id)
-      .order('finished_at', { ascending: false })
+      .order('created_at', { ascending: false })
 
     if (error) {
       toast.error('書籍の取得に失敗しました')
@@ -60,12 +60,15 @@ export function BooksProvider({ children }: { children: ReactNode }) {
 
   const addBook = useCallback(async (input: AddBookInput): Promise<Book | null> => {
     if (!user) return null
+    const status = input.status ?? 'finished'
     const { data, error } = await supabase
       .from('books')
       .insert({
         user_id: user.id,
         title: input.title,
-        finished_at: input.finishedAt,
+        status,
+        started_at: input.startedAt ?? null,
+        finished_at: input.finishedAt ?? null,
         author: input.author ?? null,
         genre: input.genre ?? null,
         rating: input.rating ?? null,
@@ -79,7 +82,7 @@ export function BooksProvider({ children }: { children: ReactNode }) {
     if (error) { toast.error('登録に失敗しました'); return null }
     const newBook = rowToBook(data as BookRow)
     setBooks(prev => [newBook, ...prev])
-    toast.success('📚 記録しました！')
+    toast.success(status === 'reading' ? '📖 読書中として記録しました！' : '📚 読了記録しました！')
     return newBook
   }, [user, supabase])
 
@@ -88,7 +91,9 @@ export function BooksProvider({ children }: { children: ReactNode }) {
       .from('books')
       .update({
         ...(input.title !== undefined && { title: input.title }),
-        ...(input.finishedAt !== undefined && { finished_at: input.finishedAt }),
+        ...(input.status !== undefined && { status: input.status }),
+        ...(input.startedAt !== undefined && { started_at: input.startedAt ?? null }),
+        ...(input.finishedAt !== undefined && { finished_at: input.finishedAt ?? null }),
         ...(input.author !== undefined && { author: input.author ?? null }),
         ...(input.genre !== undefined && { genre: input.genre ?? null }),
         ...(input.rating !== undefined && { rating: input.rating ?? null }),
@@ -101,7 +106,9 @@ export function BooksProvider({ children }: { children: ReactNode }) {
     if (error) { toast.error('更新に失敗しました'); return false }
     setBooks(prev => prev.map(b => b.id === id ? { ...b, ...{
       title: input.title ?? b.title,
-      finishedAt: input.finishedAt ?? b.finishedAt,
+      status: input.status ?? b.status,
+      startedAt: input.startedAt !== undefined ? (input.startedAt ?? undefined) : b.startedAt,
+      finishedAt: input.finishedAt !== undefined ? input.finishedAt : b.finishedAt,
       author: input.author,
       genre: input.genre,
       rating: input.rating as Book['rating'],
