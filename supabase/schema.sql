@@ -19,7 +19,7 @@ create table public.books (
   author text default null,                  -- 著者名
   genre text default null,                   -- ジャンル
   rating integer default null check (rating between 1 and 5), -- 評価
-  memo text default null,                    -- メモ（200文字以内）
+  memo text default null,                    -- メモ（2000文字以内）
   page_count integer default null,           -- ページ数
   cover_url text default null,               -- 表紙画像URL
   created_at timestamptz default now(),

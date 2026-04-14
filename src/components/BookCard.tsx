@@ -217,7 +217,7 @@ export default function BookCard({ book, onUpdate, onDelete }: Props) {
                   id="edit-memo"
                   value={memo}
                   onChange={e => setMemo(e.target.value)}
-                  maxLength={200}
+                  maxLength={2000}
                   rows={3}
                   className="w-full mt-1 px-3 py-2 border rounded-lg text-sm resize-none"
                   style={{ borderColor: 'var(--color-border)', background: 'var(--color-bg)', color: 'var(--color-text)' }}

@@ -312,7 +312,7 @@ export default function AddBookForm({ open, onClose, onAdd }: Props) {
           </div>
 
           <div>
-            <Label htmlFor="memo">メモ（200文字以内）</Label>
+            <Label htmlFor="memo">メモ（2000文字以内）</Label>
             <textarea
               id="memo"
               value={memo}
@@ -321,12 +321,12 @@ export default function AddBookForm({ open, onClose, onAdd }: Props) {
                 saveDraft({ title, finishedAt, author, genre, rating, memo: e.target.value, pageCount })
               }}
               placeholder="感想・メモ"
-              maxLength={200}
+              maxLength={2000}
               rows={3}
               className="w-full mt-1 px-3 py-2 border rounded-lg text-sm resize-none"
               style={{ borderColor: 'var(--color-border)', background: 'var(--color-bg)', color: 'var(--color-text)' }}
             />
-            <p className="text-xs text-right" style={{ color: 'var(--color-subtext)' }}>{memo.length}/200</p>
+            <p className="text-xs text-right" style={{ color: 'var(--color-subtext)' }}>{memo.length}/2000</p>
           </div>
 
           <div className="flex gap-3 pt-2">
