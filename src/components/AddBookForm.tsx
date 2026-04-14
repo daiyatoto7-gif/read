@@ -381,8 +381,8 @@ export default function AddBookForm({ open, onClose, onAdd }: Props) {
               }}
               placeholder="感想・メモ"
               maxLength={2000}
-              rows={3}
-              className="w-full mt-1 px-3 py-2 border rounded-lg text-sm resize-none"
+              rows={10}
+              className="w-full mt-1 px-3 py-2 border rounded-lg text-sm resize-y"
               style={{ borderColor: 'var(--color-border)', background: 'var(--color-bg)', color: 'var(--color-text)' }}
             />
             <p className="text-xs text-right" style={{ color: 'var(--color-subtext)' }}>{memo.length}/2000</p>

@@ -28,6 +28,7 @@ export default function BookCard({ book, onUpdate, onDelete }: Props) {
   const [open, setOpen] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [editing, setEditing] = useState(false)
+  const [editStatus, setEditStatus] = useState<'reading' | 'finished'>(book.status)
   const [title, setTitle] = useState(book.title)
   const [finishedAt, setFinishedAt] = useState(book.finishedAt ?? '')
   const [author, setAuthor] = useState(book.author ?? '')
@@ -41,7 +42,8 @@ export default function BookCard({ book, onUpdate, onDelete }: Props) {
   const handleSave = async () => {
     await onUpdate(book.id, {
       title,
-      finishedAt: finishedAt || null,
+      status: editStatus,
+      finishedAt: editStatus === 'finished' ? (finishedAt || null) : null,
       author: author || undefined,
       genre: (genre && genre !== "none") ? genre : undefined,
       rating: (rating && rating !== "none") ? Number(rating) : undefined,
@@ -201,14 +203,33 @@ export default function BookCard({ book, onUpdate, onDelete }: Props) {
             </div>
           ) : (
             <div className="mt-4 space-y-4">
+              {/* ステータス切替トグル */}
+              <div className="flex rounded-xl overflow-hidden border" style={{ borderColor: 'var(--color-border)' }}>
+                {(['reading', 'finished'] as const).map((s) => (
+                  <button
+                    key={s}
+                    type="button"
+                    onClick={() => setEditStatus(s)}
+                    className="flex-1 py-2.5 text-sm font-medium transition-colors"
+                    style={editStatus === s
+                      ? { background: 'var(--color-primary)', color: 'white' }
+                      : { background: 'var(--color-card)', color: 'var(--color-subtext)' }
+                    }
+                  >
+                    {s === 'reading' ? '📖 読書中' : '✅ 読了'}
+                  </button>
+                ))}
+              </div>
               <div>
                 <Label htmlFor="edit-title">タイトル</Label>
                 <Input id="edit-title" value={title} onChange={e => setTitle(e.target.value)} className="mt-1" />
               </div>
-              <div>
-                <Label htmlFor="edit-date">読了日</Label>
-                <Input id="edit-date" type="date" value={finishedAt} max={today} onChange={e => setFinishedAt(e.target.value)} className="mt-1" />
-              </div>
+              {editStatus === 'finished' && (
+                <div>
+                  <Label htmlFor="edit-date">読了日</Label>
+                  <Input id="edit-date" type="date" value={finishedAt} max={today} onChange={e => setFinishedAt(e.target.value)} className="mt-1" />
+                </div>
+              )}
               <div>
                 <Label htmlFor="edit-author">著者</Label>
                 <Input id="edit-author" value={author} onChange={e => setAuthor(e.target.value)} className="mt-1" />
@@ -263,8 +284,8 @@ export default function BookCard({ book, onUpdate, onDelete }: Props) {
                   value={memo}
                   onChange={e => setMemo(e.target.value)}
                   maxLength={2000}
-                  rows={3}
-                  className="w-full mt-1 px-3 py-2 border rounded-lg text-sm resize-none"
+                  rows={10}
+                  className="w-full mt-1 px-3 py-2 border rounded-lg text-sm resize-y"
                   style={{ borderColor: 'var(--color-border)', background: 'var(--color-bg)', color: 'var(--color-text)' }}
                 />
               </div>
